@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'admin_page.dart'; // ✅ Import Admin Page
 
 void main() {
   runApp(DormDashApp());
@@ -18,8 +19,9 @@ class DormDashApp extends StatelessWidget {
     );
   }
 }
-// Algorithm starts
-// Item class
+
+// ==================== DATA MODEL ====================
+
 class Item {
   final String name;
   final String condition;
@@ -35,17 +37,18 @@ class Item {
   }) : dateAdded = DateTime.now();
 }
 
-// Optimized Item Database with Binary Search Insertions & Fuzzy Search
+// ==================== OPTIMIZED DATABASE ====================
+
 class OptimizedItemDatabase {
   final List<Item> _sortedItems = [];
 
-  // Add item in sorted order (faster)
+  // ✅ Add item using Binary Search for sorted insertion (O(log n))
   void addItem(Item item) {
     int index = _binarySearchInsertPosition(item.price);
     _sortedItems.insert(index, item);
   }
 
-  // Binary Search Insert Position (O(log n))
+  // ✅ Binary Search Insert Position (O(log n))
   int _binarySearchInsertPosition(double price) {
     int left = 0, right = _sortedItems.length;
     while (left < right) {
@@ -59,54 +62,57 @@ class OptimizedItemDatabase {
     return left; // sorted position
   }
 
-  // Retrieve all items
+  // ✅ Retrieve all items
   List<Item> getAllItems() {
     return _sortedItems;
   }
 
-  // Standard Search for Exact Matches
+  // ✅ Exact Match Search
   List<Item> searchItems(String query) {
     return _sortedItems
         .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
-        .toList(); //filter items to list
+        .toList();
   }
 
-  // **Fuzzy Search using Levenshtein Distance** (Typo)
+  // ✅ Fuzzy Search (Typo Correction using Levenshtein Distance)
   List<Item> fuzzySearch(String query, int maxDistance) {
     List<Item> results = [];
     for (Item item in _sortedItems) {
       int distance = _levenshteinDistance(item.name.toLowerCase(), query.toLowerCase());
       if (distance <= maxDistance) {
-        results.add(item); // add to results
+        results.add(item);
       }
     }
     return results;
   }
 
-  // **Levenshtein Distance Algorithm (O(nm))** 2D Array dp
+  // ==================== ✅ LEVENSHTEIN DISTANCE ALGORITHM ====================
   int _levenshteinDistance(String s1, String s2) {
-    List<List<int>> dp = List.generate(s1.length + 1, (_) => List.filled(s2.length + 1, 0));
-    for (int i = 0; i <= s1.length; i++) {
-      for (int j = 0; j <= s2.length; j++) {
-        if (i == 0) {
-          dp[i][j] = j;
-        } else if (j == 0) {
-          dp[i][j] = i;
-        } else {
-          dp[i][j] = [
-            dp[i - 1][j] + 1,  //d
-            dp[i][j - 1] + 1,  //i
-            dp[i - 1][j - 1] + (s1[i - 1] == s2[j - 1] ? 0 : 1) // Substitution //Hard coded for 1 letter off
-          ].reduce((a, b) => a < b ? a : b); //choose which one to use
-        }
+    int lenA = s1.length, lenB = s2.length;
+    if (lenA == 0) return lenB;
+    if (lenB == 0) return lenA;
+
+    List<List<int>> dp = List.generate(lenA + 1, (_) => List.filled(lenB + 1, 0));
+
+    for (int i = 0; i <= lenA; i++) dp[i][0] = i;
+    for (int j = 0; j <= lenB; j++) dp[0][j] = j;
+
+    for (int i = 1; i <= lenA; i++) {
+      for (int j = 1; j <= lenB; j++) {
+        int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
+        dp[i][j] = [
+          dp[i - 1][j] + 1,  // Deletion
+          dp[i][j - 1] + 1,  // Insertion
+          dp[i - 1][j - 1] + cost  // Substitution
+        ].reduce((a, b) => a < b ? a : b);
       }
     }
-    // minium number of edits
-    return dp[s1.length][s2.length]; 
+    return dp[lenA][lenB];
   }
 }
 
-// ** UI Implementation **
+// ==================== UI IMPLEMENTATION ====================
+
 class SellGiveAwayScreen extends StatefulWidget {
   const SellGiveAwayScreen({super.key});
 
@@ -136,29 +142,42 @@ class _SellGiveAwayScreenState extends State<SellGiveAwayScreen> {
       );
       _database.addItem(newItem);
       _formKey.currentState!.reset();
-      setState(() {}); // Update UI
+      setState(() {}); // ✅ Refresh UI after adding item
     }
   }
 
   void _searchItems() {
     setState(() {
-      searchResults = _database.fuzzySearch(searchQuery, 2); // Max distance = 2
+      searchResults = _database.fuzzySearch(searchQuery, 2); // ✅ Max distance = 2 for typo tolerance
     });
   }
 
-// UI ----Frontend--------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('DormDash - Fuzzy Search')),
+      appBar: AppBar(
+        title: Text('DormDash - Fuzzy Search'),
+        actions: [
+          // ✅ Admin Page Button
+          IconButton(
+            icon: Icon(Icons.admin_panel_settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AdminPage()), // ✅ Navigate to Admin Page
+              );
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Search Bar
+            // ✅ Search Bar
             TextField(
               decoration: InputDecoration(
-                labelText: 'Search Item (with typo tolerance)',
+                labelText: 'Search Item (Typo Tolerant)',
                 suffixIcon: IconButton(
                   icon: Icon(Icons.search),
                   onPressed: _searchItems,
@@ -168,7 +187,7 @@ class _SellGiveAwayScreenState extends State<SellGiveAwayScreen> {
             ),
             SizedBox(height: 10),
 
-            // Display Search Results
+            // ✅ Display Search Results
             if (searchResults.isNotEmpty)
               Expanded(
                 child: ListView.builder(
@@ -183,10 +202,10 @@ class _SellGiveAwayScreenState extends State<SellGiveAwayScreen> {
                 ),
               ),
 
-            // Divider
+            // ✅ Divider
             Divider(height: 20, thickness: 2),
 
-            // Item Form
+            // ✅ Item Form (Add Items)
             Form(
               key: _formKey,
               child: Column(
