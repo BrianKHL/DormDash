@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'admin_page.dart'; // ✅ Import Admin Page
+import 'chat_page.dart';    // ✅ Import Chat Page
+import 'admin_page.dart';  // ✅ Import Admin Page
 
 void main() {
   runApp(DormDashApp());
@@ -15,104 +16,58 @@ class DormDashApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SellGiveAwayScreen(),
+      home: HomeScreen(), // ✅ Home Screen as the initial route
     );
   }
 }
 
-// ==================== DATA MODEL ====================
+// ==================== ✅ HOME SCREEN ====================
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
-class Item {
-  final String name;
-  final String condition;
-  final double price;
-  final String description;
-  final DateTime dateAdded;
-
-  Item({
-    required this.name,
-    required this.condition,
-    required this.price,
-    required this.description,
-  }) : dateAdded = DateTime.now();
-}
-
-// ==================== OPTIMIZED DATABASE ====================
-
-class OptimizedItemDatabase {
-  final List<Item> _sortedItems = [];
-
-  // ✅ Add item using Binary Search for sorted insertion (O(log n))
-  void addItem(Item item) {
-    int index = _binarySearchInsertPosition(item.price);
-    _sortedItems.insert(index, item);
-  }
-
-  // ✅ Binary Search Insert Position (O(log n))
-  int _binarySearchInsertPosition(double price) {
-    int left = 0, right = _sortedItems.length;
-    while (left < right) {
-      int mid = (left + right) ~/ 2;
-      if (_sortedItems[mid].price < price) {
-        left = mid + 1;
-      } else {
-        right = mid;
-      }
-    }
-    return left; // sorted position
-  }
-
-  // ✅ Retrieve all items
-  List<Item> getAllItems() {
-    return _sortedItems;
-  }
-
-  // ✅ Exact Match Search
-  List<Item> searchItems(String query) {
-    return _sortedItems
-        .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-  }
-
-  // ✅ Fuzzy Search (Typo Correction using Levenshtein Distance)
-  List<Item> fuzzySearch(String query, int maxDistance) {
-    List<Item> results = [];
-    for (Item item in _sortedItems) {
-      int distance = _levenshteinDistance(item.name.toLowerCase(), query.toLowerCase());
-      if (distance <= maxDistance) {
-        results.add(item);
-      }
-    }
-    return results;
-  }
-
-  // ==================== ✅ LEVENSHTEIN DISTANCE ALGORITHM ====================
-  int _levenshteinDistance(String s1, String s2) {
-    int lenA = s1.length, lenB = s2.length;
-    if (lenA == 0) return lenB;
-    if (lenB == 0) return lenA;
-
-    List<List<int>> dp = List.generate(lenA + 1, (_) => List.filled(lenB + 1, 0));
-
-    for (int i = 0; i <= lenA; i++) dp[i][0] = i;
-    for (int j = 0; j <= lenB; j++) dp[0][j] = j;
-
-    for (int i = 1; i <= lenA; i++) {
-      for (int j = 1; j <= lenB; j++) {
-        int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
-        dp[i][j] = [
-          dp[i - 1][j] + 1,  // Deletion
-          dp[i][j - 1] + 1,  // Insertion
-          dp[i - 1][j - 1] + cost  // Substitution
-        ].reduce((a, b) => a < b ? a : b);
-      }
-    }
-    return dp[lenA][lenB];
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('DormDash - Home')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              child: Text("Sell/Give Away Items"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SellGiveAwayScreen()),
+                );
+              },
+            ),
+            ElevatedButton(
+              child: Text("Go to Chat"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatPage()), // ✅ Navigate to Chat Feature
+                );
+              },
+            ),
+            ElevatedButton(
+              child: Text("Admin Panel"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminPage()), // ✅ Navigate to Admin Page
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
-// ==================== UI IMPLEMENTATION ====================
-
+// ==================== ✅ SELL/GIVEAWAY ITEMS SCREEN ====================
 class SellGiveAwayScreen extends StatefulWidget {
   const SellGiveAwayScreen({super.key});
 
@@ -142,42 +97,28 @@ class _SellGiveAwayScreenState extends State<SellGiveAwayScreen> {
       );
       _database.addItem(newItem);
       _formKey.currentState!.reset();
-      setState(() {}); // ✅ Refresh UI after adding item
+      setState(() {}); // Update UI
     }
   }
 
   void _searchItems() {
     setState(() {
-      searchResults = _database.fuzzySearch(searchQuery, 2); // ✅ Max distance = 2 for typo tolerance
+      searchResults = _database.fuzzySearch(searchQuery, 2); // Max distance = 2
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('DormDash - Fuzzy Search'),
-        actions: [
-          // ✅ Admin Page Button
-          IconButton(
-            icon: Icon(Icons.admin_panel_settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AdminPage()), // ✅ Navigate to Admin Page
-              );
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text('DormDash - Fuzzy Search')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // ✅ Search Bar
+            // Search Bar
             TextField(
               decoration: InputDecoration(
-                labelText: 'Search Item (Typo Tolerant)',
+                labelText: 'Search Item (with typo tolerance)',
                 suffixIcon: IconButton(
                   icon: Icon(Icons.search),
                   onPressed: _searchItems,
@@ -187,7 +128,7 @@ class _SellGiveAwayScreenState extends State<SellGiveAwayScreen> {
             ),
             SizedBox(height: 10),
 
-            // ✅ Display Search Results
+            // Display Search Results
             if (searchResults.isNotEmpty)
               Expanded(
                 child: ListView.builder(
@@ -202,10 +143,10 @@ class _SellGiveAwayScreenState extends State<SellGiveAwayScreen> {
                 ),
               ),
 
-            // ✅ Divider
+            // Divider
             Divider(height: 20, thickness: 2),
 
-            // ✅ Item Form (Add Items)
+            // Item Form
             Form(
               key: _formKey,
               child: Column(
@@ -244,5 +185,83 @@ class _SellGiveAwayScreenState extends State<SellGiveAwayScreen> {
         ),
       ),
     );
+  }
+}
+
+// ==================== ✅ ITEM CLASS ====================
+class Item {
+  final String name;
+  final String condition;
+  final double price;
+  final String description;
+  final DateTime dateAdded;
+
+  Item({
+    required this.name,
+    required this.condition,
+    required this.price,
+    required this.description,
+  }) : dateAdded = DateTime.now();
+}
+
+// ==================== ✅ OPTIMIZED ITEM DATABASE ====================
+class OptimizedItemDatabase {
+  final List<Item> _sortedItems = [];
+
+  void addItem(Item item) {
+    int index = _binarySearchInsertPosition(item.price);
+    _sortedItems.insert(index, item);
+  }
+
+  int _binarySearchInsertPosition(double price) {
+    int left = 0, right = _sortedItems.length;
+    while (left < right) {
+      int mid = (left + right) ~/ 2;
+      if (_sortedItems[mid].price < price) {
+        left = mid + 1;
+      } else {
+        right = mid;
+      }
+    }
+    return left;
+  }
+
+  List<Item> getAllItems() {
+    return _sortedItems;
+  }
+
+  List<Item> searchItems(String query) {
+    return _sortedItems
+        .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+  }
+
+  List<Item> fuzzySearch(String query, int maxDistance) {
+    List<Item> results = [];
+    for (Item item in _sortedItems) {
+      int distance = _levenshteinDistance(item.name.toLowerCase(), query.toLowerCase());
+      if (distance <= maxDistance) {
+        results.add(item);
+      }
+    }
+    return results;
+  }
+
+  int _levenshteinDistance(String s1, String s2) {
+    List<List<int>> dp = List.generate(s1.length + 1, (_) => List.filled(s2.length + 1, 0));
+    for (int i = 0; i <= s1.length; i++) {
+      for (int j = 0; j <= s2.length; j++) {
+        if (i == 0) dp[i][j] = j;
+        else if (j == 0) dp[i][j] = i;
+        else {
+          dp[i][j] = [
+            dp[i - 1][j] + 1,
+            dp[i][j - 1] + 1,
+            dp[i - 1][j - 1] + (s1[i - 1] == s2[j - 1] ? 0 : 1)
+          ].reduce((a, b) => a < b ? a : b);
+        }
+      }
+    }
+    return dp[s1.length][s2.length];
   }
 }

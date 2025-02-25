@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AdminPage extends StatefulWidget {
+  const AdminPage({super.key});
+
   @override
   _AdminPageState createState() => _AdminPageState();
 }
@@ -115,7 +117,7 @@ void printDpTable(List<List<int>> dp, String a, String b) {
     print("\nLevenshtein Distance DP Table:");
 
     // Print column headers (word `b`), aligned properly
-    print("     " + b.split('').join("  ")); 
+    print("     ${b.split('').join("  ")}"); 
 
     for (int i = 0; i < dp.length; i++) { //i = row index
         String rowLabel = (i > 0 ? a[i - 1] : ' ');  
