@@ -5,6 +5,7 @@ import 'pages/admin_page.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'pages/lost_found_page.dart';
 
 // SHA256 and AuthService classes remain the same, but at the end
 // First, added sha256 to main.dart and create the AuthScreen
@@ -20,6 +21,7 @@ class DormDashApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'DormDash',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -149,6 +151,15 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SellGiveAwayScreen()),
+                );
+              },
+            ),
+            ElevatedButton(
+              child: Text("Lost & Found"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LostFoundScreen()),
                 );
               },
             ),
